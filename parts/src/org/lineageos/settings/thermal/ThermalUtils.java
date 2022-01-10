@@ -24,8 +24,8 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.UserHandle;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.telecom.DefaultDialerManager;
+import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 import androidx.preference.PreferenceManager;
@@ -49,7 +49,9 @@ public final class ThermalUtils {
     protected static final int STATE_CAMERA = 3;
     protected static final int STATE_DIALER = 4;
     protected static final int STATE_GAMING = 5;
-    protected static final int STATE_STREAMING = 6;
+    protected static final int STATE_NAVIGATION = 6;
+    protected static final int STATE_STREAMING = 7;
+    protected static final int STATE_VIDEO = 8;
 
     private static final Map<Integer, String> THERMAL_STATE_MAP = Map.of(
         STATE_DEFAULT, "0",
@@ -58,16 +60,20 @@ public final class ThermalUtils {
         STATE_CAMERA, "12",
         STATE_DIALER, "8",
         STATE_GAMING, "13",
-        STATE_STREAMING, "14"
+        STATE_NAVIGATION, "19",
+        STATE_STREAMING, "4",
+        STATE_VIDEO, "21"
     );
 
     private static final String THERMAL_BENCHMARK = "thermal.benchmark=";
     private static final String THERMAL_BROWSER = "thermal.browser=";
     private static final String THERMAL_CAMERA = "thermal.camera=";
-    private static final String THERMAL_DEFAULT = "thermal.default=";
     private static final String THERMAL_DIALER = "thermal.dialer=";
     private static final String THERMAL_GAMING = "thermal.gaming=";
+    private static final String THERMAL_NAVIGATION = "thermal.navigation=";
     private static final String THERMAL_STREAMING = "thermal.streaming=";
+    private static final String THERMAL_VIDEO = "thermal.video=";
+    private static final String THERMAL_DEFAULT = "thermal.default=";
 
     private static final String THERMAL_SCONFIG = "/sys/class/thermal/thermal_message/sconfig";
 
@@ -138,8 +144,8 @@ public final class ThermalUtils {
 
         if (value == null || value.isEmpty()) {
             value = THERMAL_BENCHMARK + ":" + THERMAL_BROWSER + ":" + THERMAL_CAMERA + ":" +
-                    THERMAL_DIALER + ":" + THERMAL_GAMING + ":" + THERMAL_STREAMING + ":" +
-                    THERMAL_DEFAULT;
+                    THERMAL_DIALER + ":" + THERMAL_GAMING + ":" + THERMAL_NAVIGATION + ":" +
+                    THERMAL_STREAMING + ":" + THERMAL_VIDEO + ":" + THERMAL_DEFAULT;
             writeValue(value);
         }
         return value;
@@ -167,16 +173,22 @@ public final class ThermalUtils {
             case STATE_GAMING:
                 modes[4] = modes[4] + packageName + ",";
                 break;
-            case STATE_STREAMING:
+            case STATE_NAVIGATION:
                 modes[5] = modes[5] + packageName + ",";
                 break;
-            case STATE_DEFAULT:
+            case STATE_STREAMING:
                 modes[6] = modes[6] + packageName + ",";
+                break;
+            case STATE_VIDEO:
+                modes[7] = modes[7] + packageName + ",";
+                break;
+            case STATE_DEFAULT:
+                modes[8] = modes[8] + packageName + ",";
                 break;
         }
 
         finalString = modes[0] + ":" + modes[1] + ":" + modes[2] + ":" + modes[3] + ":" +
-                modes[4] + ":" + modes[5] + ":" + modes[6];
+                modes[4] + ":" + modes[5] + ":" + modes[6] + ":" + modes[7] + ":" + modes[8];
 
         writeValue(finalString);
     }
@@ -197,8 +209,12 @@ public final class ThermalUtils {
         } else if (modes[4].contains(packageName + ",")) {
             state = STATE_GAMING;
         } else if (modes[5].contains(packageName + ",")) {
-            state = STATE_STREAMING;
+            state = STATE_NAVIGATION;
         } else if (modes[6].contains(packageName + ",")) {
+            state = STATE_STREAMING;
+        } else if (modes[7].contains(packageName + ",")) {
+            state = STATE_VIDEO;
+        } else if (modes[8].contains(packageName + ",")) {
             state = STATE_DEFAULT;
         } else {
             // derive a default state based on package name
@@ -220,7 +236,7 @@ public final class ThermalUtils {
     private int getDefaultStateForPackage(String packageName) {
         switch (packageName) {
             case GMAPS_PACKAGE:
-                return STATE_BROWSER;
+                return STATE_NAVIGATION;
             case GMEET_PACKAGE:
                 return STATE_STREAMING;
         }
@@ -237,9 +253,9 @@ public final class ThermalUtils {
             case ApplicationInfo.CATEGORY_GAME:
                 return STATE_GAMING;
             case ApplicationInfo.CATEGORY_VIDEO:
-                return STATE_STREAMING;
+                return STATE_VIDEO;
             case ApplicationInfo.CATEGORY_MAPS:
-                return STATE_BROWSER;
+                return STATE_NAVIGATION;
         }
 
         if (AppUtils.isBrowserApp(mContext, packageName, UserHandle.myUserId())) {
