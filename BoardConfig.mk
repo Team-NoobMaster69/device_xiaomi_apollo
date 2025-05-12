@@ -66,9 +66,6 @@ BOARD_MKBOOTIMG_ARGS += --header_version $(BOARD_BOOT_HEADER_VERSION)
 TARGET_KERNEL_SOURCE := kernel/xiaomi/apollo
 TARGET_KERNEL_CONFIG := vendor/apollo_defconfig
 
-# Lineage Health
-TARGET_HEALTH_CHARGING_CONTROL_SUPPORTS_BYPASS := false
-
 # Media
 TARGET_USES_ION := true
 
